@@ -61,7 +61,7 @@
         .scratch-container {
             position: relative;        /* Nécessaire pour superposer canvas et image */
             width: 300px;
-            height: 300px;
+            height: 420px;
             margin: 0 auto 15px auto;
             border-radius: 10px;
             overflow: hidden;          /* Cache ce qui dépasse du cadre */
@@ -72,8 +72,9 @@
         /* L'image cachée EN DESSOUS */
         #image-dessous {
             width: 300px;
-            height: 300px;
+            height: 420px;
             object-fit: cover;         /* L'image remplit bien le cadre */
+            object-position: top;
             display: block;
         }
 
@@ -305,7 +306,7 @@
 
         // On peint tout le canvas en gris argenté (la couche à gratter)
         ctx.fillStyle = '#BBBFBE';
-        ctx.fillRect(0, 0, 300, 300);
+        ctx.fillRect(0, 0, 300, 420);
 
         // On ajoute un texte sur la couche grise
         ctx.fillStyle = '#8A8E8D';
@@ -369,7 +370,7 @@
         // ============================================
         function verifierProgression() {
             // On analyse tous les pixels du canvas
-            const imageData   = ctx.getImageData(0, 0, 300, 300);
+            const imageData   = ctx.getImageData(0, 0, 300, 420);
             const pixels      = imageData.data;
             let pixelsGrattes = 0;
 
@@ -383,7 +384,7 @@
             }
 
             // Calcul du pourcentage gratté
-            const total       = 300 * 300; // nombre total de pixels
+            const total       = 300 * 420; // nombre total de pixels
             const pourcentage = (pixelsGrattes / total) * 100;
 
             // Si on a gratté plus de 50% ET que le formulaire n'est pas encore affiché
