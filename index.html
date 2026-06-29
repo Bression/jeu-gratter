@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <!-- Très important pour mobile (QR code = téléphone !) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>🤠 Jeu à Gratter !</title>
+
+    <style>
+        /* ===================================
+           CSS — LE STYLE DE LA PAGE
+           Thème Far West / Parchemin
+        =================================== */
+
+        /* Remet à zéro les marges par défaut du navigateur */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Fond de page couleur coucher de soleil */
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(160deg, #8B1A1A 0%, #D2691E 50%, #CD853F 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* La carte principale (couleur parchemin) */
+        .container {
+            background: #FFF8DC;
+            border-radius: 15px;
+            padding: 25px 20px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            border: 4px solid #8B4513;
+            text-align: center;
+        }
+
+        /* Le titre principal */
+        h1 {
+            font-size: 1.4em;
+            color: #5C3317;
+            margin-bottom: 5px;
+            line-height: 1.3;
+        }
+
+        /* Le sous-titre */
+        .sous-titre {
+            font-size: 0.9em;
+            color: #8B6914;
+            margin-bottom: 20px;
+        }
+
+        /* Le cadre qui contient la case à gratter */
+        .scratch-container {
+            position: relative;        /* Nécessaire pour superposer canvas et image */
+            width: 300px;
+            height: 300px;
+            margin: 0 auto 15px auto;
+            border-radius: 10px;
+            overflow: hidden;          /* Cache ce qui dépasse du cadre */
+            border: 3px solid #8B4513;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        /* L'image cachée EN DESSOUS */
+        #image-dessous {
+            width: 300px;
+            height: 300px;
+            object-fit: cover;         /* L'image remplit bien le cadre */
+            display: block;
+        }
+
+        /* Le canvas gris EN DESSUS (la couche à gratter) */
+        #canvas-gratter {
+            position: absolute;        /* Se superpose exactement sur l'image */
+            top: 0;
+            left: 0;
+            cursor: crosshair;         /* Curseur en croix pour gratter */
+            touch-action: none;        /* IMPORTANT : empêche le scroll sur mobile */
+        }
+
+        /* Le texte animé "Grattez ici" */
+        .hint-gratter {
+            font-size: 0.9em;
+            color: #8B6914;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        /* Animation clignotante pour le hint */
+        .clignote {
+            animation: clignote 1.5s infinite;
+        }
+        @keyframes clignote {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* ===== FORMULAIRE (caché au début) ===== */
+        #formulaire {
+            display: none;             /* Invisible au départ */
+            animation: apparition 0.6s ease;
+        }
+
+        /* Animation d'apparition douce du formulaire */
+        @keyframes apparition {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-titre {
+            font-size: 1.05em;
+            color: #5C3317;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        /* Chaque groupe label + input */
+        .form-groupe {
+            margin-bottom: 12px;
+            text-align: left;
+        }
+
+        .form-groupe label {
+            display: block;
+            font-size: 0.85em;
+            color: #5C3317;
+            margin-bottom: 4px;
+            font-weight: bold;
+        }
+
+        .form-groupe input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #D2691E;
+            border-radius: 8px;
+            font-size: 0.95em;
+            background: #FFFAF0;
+            color: #333;
+            outline: none;
+        }
+
+        /* Quand on clique sur un champ, la bordure devient plus foncée */
+        .form-groupe input:focus {
+            border-color: #8B4513;
+        }
+
+        /* ===== BOUTON PARTICIPER ===== */
+        #btn-participer {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #8B4513, #D2691E);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.05em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 8px;
+            box-shadow: 0 4px 15px rgba(139,69,19,0.4);
+            transition: transform 0.1s;
+        }
+
+        #btn-participer:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Bouton grisé pendant l'envoi */
+        #btn-participer:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ===== MESSAGE D'ERREUR ===== */
+        #message-erreur {
+            display: none;
+            background: #FFF0F0;
+            border: 2px solid #CC0000;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            color: #CC0000;
+            font-size: 0.85em;
+        }
+
+        /* ===== MESSAGE DE CONFIRMATION FINALE ===== */
+        #message-confirmation {
+            display: none;
+            background: #F0FFF4;
+            border: 2px solid #228B22;
+            border-radius: 10px;
+            padding: 20px;
+            animation: apparition 0.6s ease;
+        }
+
+        #message-confirmation h2 {
+            color: #228B22;
+            font-size: 1.4em;
+            margin-bottom: 10px;
+        }
+
+        #message-confirmation p {
+            color: #5C3317;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <!-- LE TITRE -->
+        <h1>🤠 Dernier jour avant<br>le coucher du soleil !</h1>
+        <p class="sous-titre">Grattez et tentez de gagner un SR d'or !</p>
+
+        <!-- LA ZONE À GRATTER -->
+        <div class="scratch-container">
+
+            <!-- L'image est cachée EN DESSOUS -->
+            <img id="image-dessous" src="cowboy.png" alt="Surprise !">
+
+            <!-- Le canvas gris est par-dessus. C'est lui qu'on gratte ! -->
+            <canvas id="canvas-gratter" width="300" height="300"></canvas>
+
+        </div>
+
+        <!-- Texte d'instruction (change quand le formulaire apparaît) -->
+        <p class="hint-gratter clignote" id="texte-hint">
+            👆 Grattez avec votre doigt pour découvrir la surprise !
+        </p>
+
+        <!-- LE FORMULAIRE (caché au départ, apparaît après 50% gratté) -->
+        <div id="formulaire">
+            <p class="form-titre">🎰 Participez au tirage au sort !<br>Un SR d'or à gagner 🏆</p>
+
+            <div class="form-groupe">
+                <label for="input-nom">Nom *</label>
+                <input type="text" id="input-nom" placeholder="Ex : Dupont">
+            </div>
+
+            <div class="form-groupe">
+                <label for="input-prenom">Prénom *</label>
+                <input type="text" id="input-prenom" placeholder="Ex : Jean">
+            </div>
+
+            <div class="form-groupe">
+                <label for="input-email">Email *</label>
+                <input type="email" id="input-email" placeholder="Ex : jean@email.com">
+            </div>
+
+            <!-- Message d'erreur (caché par défaut) -->
+            <div id="message-erreur">
+                ⚠️ Veuillez remplir tous les champs correctement.
+            </div>
+
+            <!-- Le bouton principal -->
+            <button id="btn-participer" onclick="envoyerParticipation()">
+                🤠 Je participe au tirage au sort !
+            </button>
+        </div>
+
+        <!-- LE MESSAGE FINAL (affiché après envoi réussi) -->
+        <div id="message-confirmation">
+            <h2>🎉 Bonne chance, cowboy !</h2>
+            <p>
+                Votre participation a bien été enregistrée !<br><br>
+                Le tirage au sort aura lieu bientôt.<br>
+                Que le meilleur gagne ! 🤠⭐
+            </p>
+        </div>
+
+    </div>
+
+    <script>
+        // ============================================
+        // JAVASCRIPT — L'INTERACTIVITÉ DE LA PAGE
+        // ============================================
+
+        // 🔗 L'URL de ton flux Power Automate
+        // C'est "l'adresse postale" où on envoie les données
+        const URL_POWER_AUTOMATE = "https://defaultcb5ba35d205641eb8d89b0ad0e93d1.31.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/32782342467643efbf10c20ee28ca1ab/triggers/manual/paths/invoke?api-version=1";
+
+        // ============================================
+        // VARIABLES DE CONTRÔLE
+        // ============================================
+        let estEnTrainDeGratter = false;  // L'utilisateur est-il en train de gratter ?
+        let formulaireAffiche   = false;  // Le formulaire est-il déjà visible ?
+
+        // ============================================
+        // INITIALISATION DU CANVAS
+        // Le canvas est la "couche grise" qu'on va gratter
+        // ============================================
+        const canvas = document.getElementById('canvas-gratter');
+        const ctx    = canvas.getContext('2d');  // ctx = le "crayon" pour dessiner
+
+        // On peint tout le canvas en gris argenté (la couche à gratter)
+        ctx.fillStyle = '#BBBFBE';
+        ctx.fillRect(0, 0, 300, 300);
+
+        // On ajoute un texte sur la couche grise
+        ctx.fillStyle = '#8A8E8D';
+        ctx.font      = 'bold 20px Georgia';
+        ctx.textAlign = 'center';
+        ctx.fillText('✨ GRATTEZ ICI ✨', 150, 135);
+        ctx.font = '15px Georgia';
+        ctx.fillText('👆 Avec votre doigt', 150, 170);
+
+        // ⭐ MODE MAGIQUE : "destination-out" efface le canvas là où on dessine
+        // C'est ce qui crée l'effet de grattage !
+        ctx.globalCompositeOperation = 'destination-out';
+
+        // ============================================
+        // RÉCUPÉRER LA POSITION DU DOIGT OU DE LA SOURIS
+        // ============================================
+        function getPosition(evenement) {
+            // getBoundingClientRect donne la position exacte du canvas sur l'écran
+            const rect = canvas.getBoundingClientRect();
+
+            // Sur téléphone (tactile)
+            if (evenement.touches && evenement.touches[0]) {
+                return {
+                    x: evenement.touches[0].clientX - rect.left,
+                    y: evenement.touches[0].clientY - rect.top
+                };
+            }
+
+            // Sur ordinateur (souris)
+            return {
+                x: evenement.clientX - rect.left,
+                y: evenement.clientY - rect.top
+            };
+        }
+
+        // ============================================
+        // FONCTION DE GRATTAGE
+        // Dessine un cercle transparent = efface la couche grise
+        // ============================================
+        function gratter(evenement) {
+            // Si le doigt/bouton n'est pas appuyé, on ne fait rien
+            if (!estEnTrainDeGratter) return;
+
+            // Empêche la page de scroller pendant qu'on gratte (sur mobile)
+            evenement.preventDefault();
+
+            const pos = getPosition(evenement);
+
+            // On dessine un cercle qui "efface" la couche grise (grâce à destination-out)
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, 28, 0, Math.PI * 2); // Cercle de rayon 28
+            ctx.fill();
+
+            // Après chaque coup de grattage, on vérifie si c'est assez gratté
+            verifierProgression();
+        }
+
+        // ============================================
+        // VÉRIFIER LE % GRATTÉ
+        // On compte les pixels transparents du canvas
+        // ============================================
+        function verifierProgression() {
+            // On analyse tous les pixels du canvas
+            const imageData   = ctx.getImageData(0, 0, 300, 300);
+            const pixels      = imageData.data;
+            let pixelsGrattes = 0;
+
+            // Chaque pixel a 4 valeurs : Rouge, Vert, Bleu, Alpha (transparence)
+            // On regarde uniquement le canal Alpha (position 3, 7, 11, ...)
+            // Alpha = 0 signifie transparent = pixel gratté !
+            for (let i = 3; i < pixels.length; i += 4) {
+                if (pixels[i] < 10) {
+                    pixelsGrattes++;
+                }
+            }
+
+            // Calcul du pourcentage gratté
+            const total       = 300 * 300; // nombre total de pixels
+            const pourcentage = (pixelsGrattes / total) * 100;
+
+            // Si on a gratté plus de 50% ET que le formulaire n'est pas encore affiché
+            if (pourcentage > 50 && !formulaireAffiche) {
+                afficherFormulaire();
+            }
+        }
+
+        // ============================================
+        // AFFICHER LE FORMULAIRE
+        // ============================================
+        function afficherFormulaire() {
+            formulaireAffiche = true;
+
+            // On affiche le formulaire
+            document.getElementById('formulaire').style.display = 'block';
+
+            // On change le texte d'instruction
+            const hint = document.getElementById('texte-hint');
+            hint.textContent = '🎉 Bravo ! Remplissez le formulaire pour participer !';
+            hint.classList.remove('clignote'); // On arrête le clignotement
+        }
+
+        // ============================================
+        // ÉVÉNEMENTS SOURIS (ordinateur)
+        // ============================================
+        canvas.addEventListener('mousedown',  () => { estEnTrainDeGratter = true;  });
+        canvas.addEventListener('mousemove',  gratter);
+        canvas.addEventListener('mouseup',    () => { estEnTrainDeGratter = false; });
+        canvas.addEventListener('mouseleave', () => { estEnTrainDeGratter = false; });
+
+        // ============================================
+        // ÉVÉNEMENTS TACTILES (téléphone/tablette)
+        // ============================================
+        canvas.addEventListener('touchstart', () => { estEnTrainDeGratter = true;  });
+        canvas.addEventListener('touchmove',  gratter);
+        canvas.addEventListener('touchend',   () => { estEnTrainDeGratter = false; });
+
+        // ============================================
+        // ENVOYER LA PARTICIPATION À POWER AUTOMATE
+        // C'est comme "poster une lettre" avec les infos du participant
+        // ============================================
+        async function envoyerParticipation() {
+
+            // On récupère ce que l'utilisateur a tapé dans les champs
+            const nom    = document.getElementById('input-nom').value.trim();
+            const prenom = document.getElementById('input-prenom').value.trim();
+            const email  = document.getElementById('input-email').value.trim();
+
+            // Vérification : tous les champs sont-ils remplis ?
+            if (!nom || !prenom || !email || !email.includes('@')) {
+                document.getElementById('message-erreur').style.display = 'block';
+                return; // On s'arrête ici si un champ est vide
+            }
+
+            // Cache le message d'erreur s'il était affiché
+            document.getElementById('message-erreur').style.display = 'none';
+
+            // Désactive le bouton pour éviter un double-clic
+            const bouton      = document.getElementById('btn-participer');
+            bouton.disabled   = true;
+            bouton.textContent = '⏳ Envoi en cours...';
+
+            // Prépare les données (comme remplir une enveloppe)
+            const donnees = {
+                "Titre":  "Participant",
+                "Nom":    nom,
+                "Prenom": prenom,
+                "Email":  email
+            };
+
+            try {
+                // Envoie les données à Power Automate (poste la lettre !)
+                const reponse = await fetch(URL_POWER_AUTOMATE, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(donnees) // Convertit les données en format JSON
+                });
+
+                // Power Automate répond 200 ou 202 quand c'est OK
+                if (reponse.ok || reponse.status === 202) {
+                    // Succès : on cache le formulaire et on montre la confirmation
+                    document.getElementById('formulaire').style.display = 'none';
+                    document.getElementById('message-confirmation').style.display = 'block';
+                } else {
+                    throw new Error('Erreur : ' + reponse.status);
+                }
+
+            } catch (erreur) {
+                // En cas de problème, on réactive le bouton
+                bouton.disabled   = false;
+                bouton.textContent = '🤠 Je participe au tirage au sort !';
+                alert('❌ Une erreur est survenue. Veuillez réessayer.');
+                console.error('Détail erreur :', erreur);
+            }
+        }
+
+    </script>
+
+</body>
+</html>
