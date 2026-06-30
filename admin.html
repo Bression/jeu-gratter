@@ -369,7 +369,7 @@
             try {
                 // On "appelle" le flux Power Automate de lecture
                 const reponse = await fetch(URL_LECTURE, {
-                    method: 'POST'
+                    method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({})
                 });
