@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤠 Admin — Résultats du Jeu</title>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(160deg, #8B1A1A 0%, #D2691E 50%, #CD853F 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* ===== ÉCRAN MOT DE PASSE ===== */
+        #ecran-mdp {
+            background: #FFF8DC;
+            border-radius: 15px;
+            padding: 40px 30px;
+            max-width: 350px;
+            width: 100%;
+            text-align: center;
+            border: 4px solid #8B4513;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        #ecran-mdp h1 {
+            color: #5C3317;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        #ecran-mdp p {
+            color: #8B6914;
+            margin-bottom: 25px;
+            font-size: 0.9em;
+        }
+
+        #input-mdp {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #D2691E;
+            border-radius: 8px;
+            font-size: 1em;
+            margin-bottom: 15px;
+            text-align: center;
+            background: #FFFAF0;
+        }
+
+        #erreur-mdp {
+            color: #CC0000;
+            font-size: 0.85em;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        /* ===== BOUTONS GÉNÉRAUX ===== */
+        .btn {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .btn:hover { transform: translateY(-2px); }
+
+        .btn-marron {
+            background: linear-gradient(135deg, #8B4513, #D2691E);
+            color: white;
+            box-shadow: 0 4px 15px rgba(139,69,19,0.4);
+        }
+
+        .btn-vert {
+            background: linear-gradient(135deg, #228B22, #32CD32);
+            color: white;
+            box-shadow: 0 4px 15px rgba(34,139,34,0.4);
+            margin-bottom: 10px;
+        }
+
+        .btn-or {
+            background: linear-gradient(135deg, #B8860B, #FFD700);
+            color: #5C3317;
+            box-shadow: 0 4px 15px rgba(184,134,11,0.4);
+            font-size: 1.1em;
+            padding: 16px;
+        }
+
+        /* ===== PAGE ADMIN ===== */
+        #page-admin {
+            display: none;
+            background: #FFF8DC;
+            border-radius: 15px;
+            padding: 25px 20px;
+            max-width: 800px;
+            width: 100%;
+            border: 4px solid #8B4513;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        #page-admin h1 {
+            color: #5C3317;
+            font-size: 1.5em;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        /* ===== COMPTEUR ===== */
+        .compteur {
+            text-align: center;
+            background: #8B4513;
+            color: #FFD700;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        /* ===== TABLEAU ===== */
+        .table-container {
+            overflow-x: auto;
+            margin: 15px 0;
+            border-radius: 10px;
+            border: 2px solid #D2691E;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+
+        thead {
+            background: #8B4513;
+            color: white;
+        }
+
+        thead th {
+            padding: 12px 15px;
+            text-align: left;
+        }
+
+        tbody tr:nth-child(even)  { background: #FFF0DC; }
+        tbody tr:nth-child(odd)   { background: #FFF8DC; }
+        tbody tr:hover            { background: #FFE4B5; }
+
+        tbody td {
+            padding: 10px 15px;
+            border-bottom: 1px solid #D2691E;
+            color: #5C3317;
+        }
+
+        /* ===== ZONE TIRAGE AU SORT ===== */
+        .zone-tirage {
+            margin-top: 20px;
+            text-align: center;
+            padding: 20px;
+            background: #FFF0DC;
+            border-radius: 10px;
+            border: 2px solid #D2691E;
+        }
+
+        .zone-tirage h2 {
+            color: #5C3317;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        /* ===== ANIMATION TIRAGE ===== */
+        #animation-tirage {
+            display: none;
+            font-size: 1.1em;
+            color: #8B4513;
+            font-weight: bold;
+            margin: 15px 0;
+            animation: clignoter 0.3s infinite;
+        }
+
+        @keyframes clignoter {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.3; }
+        }
+
+        /* ===== GAGNANT ===== */
+        #resultat-tirage {
+            display: none;
+            background: linear-gradient(135deg, #B8860B, #FFD700);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 15px;
+            animation: apparition 0.5s ease;
+        }
+
+        @keyframes apparition {
+            from { opacity: 0; transform: scale(0.8); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        #resultat-tirage h3 {
+            color: #5C3317;
+            font-size: 1.4em;
+            margin-bottom: 10px;
+        }
+
+        #nom-gagnant {
+            color: #5C3317;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        #email-gagnant {
+            color: #8B4513;
+            font-size: 0.95em;
+            margin-top: 5px;
+        }
+
+        /* ===== CHARGEMENT ===== */
+        #chargement {
+            text-align: center;
+            color: #8B6914;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        /* ===== BOUTON RELANCER ===== */
+        #btn-relancer {
+            display: none;
+            margin-top: 12px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- ========== ÉCRAN MOT DE PASSE ========== -->
+    <div id="ecran-mdp">
+        <h1>🔒 Accès Admin</h1>
+        <p>Entrez le mot de passe pour accéder aux résultats</p>
+        <input type="password" id="input-mdp" placeholder="Mot de passe..." 
+               onkeypress="if(event.key==='Enter') verifierMdp()">
+        <p id="erreur-mdp">❌ Mot de passe incorrect !</p>
+        <button class="btn btn-marron" onclick="verifierMdp()">
+            🤠 Entrer
+        </button>
+    </div>
+
+    <!-- ========== PAGE ADMIN ========== -->
+    <div id="page-admin">
+
+        <h1>🤠 Résultats — Jeu à Gratter</h1>
+
+        <!-- Compteur de participants -->
+        <div class="compteur" id="compteur">
+            ⏳ Chargement...
+        </div>
+
+        <!-- Bouton actualiser -->
+        <button class="btn btn-vert" onclick="chargerParticipants()">
+            🔄 Actualiser la liste
+        </button>
+
+        <!-- Tableau des participants -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Nom</th>
+                        <th>Prénom</th>
+                        <th>Email</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody id="tableau-participants">
+                    <tr>
+                        <td colspan="5" id="chargement">
+                            ⏳ Chargement des participants...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Zone tirage au sort -->
+        <div class="zone-tirage">
+            <h2>🎰 Tirage au sort</h2>
+
+            <button class="btn btn-or" onclick="lancerTirage()">
+                🏆 LANCER LE TIRAGE AU SORT !
+            </button>
+
+            <!-- Animation pendant le tirage -->
+            <div id="animation-tirage">
+                🎲 Tirage en cours... 🎲
+            </div>
+
+            <!-- Résultat du tirage -->
+            <div id="resultat-tirage">
+                <h3>🏆 Et le gagnant est...</h3>
+                <p id="nom-gagnant"></p>
+                <p id="email-gagnant"></p>
+            </div>
+
+            <!-- Bouton relancer -->
+            <button class="btn btn-marron" id="btn-relancer" onclick="lancerTirage()">
+                🔄 Relancer le tirage
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+
+        // 🔐 Mot de passe admin — change-le ici !
+        const MOT_DE_PASSE = "keyence2025";
+
+        // 🔗 URL du flux Power Automate de LECTURE
+        const URL_LECTURE = "https://defaultcb5ba35d205641eb8d89b0ad0e93d1.31.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/21a63cbdf97c4be28f41fee41050e793/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=H1qwWIutr9Ynva69IS4cWJpUxWsR7B4Y27HRNxtIFuY";
+
+        // Stocke la liste des participants
+        let participants = [];
+
+        // ============================================
+        // VÉRIFICATION DU MOT DE PASSE
+        // ============================================
+        function verifierMdp() {
+            const mdp = document.getElementById('input-mdp').value;
+
+            if (mdp === MOT_DE_PASSE) {
+                // Bon mot de passe → on affiche la page admin
+                document.getElementById('ecran-mdp').style.display  = 'none';
+                document.getElementById('page-admin').style.display = 'block';
+
+                // On charge automatiquement les participants
+                chargerParticipants();
+
+            } else {
+                // Mauvais mot de passe → message d'erreur
+                document.getElementById('erreur-mdp').style.display = 'block';
+                document.getElementById('input-mdp').value          = '';
+            }
+        }
+
+        // ============================================
+        // CHARGER LES PARTICIPANTS DEPUIS SHAREPOINT
+        // Via le flux Power Automate de lecture
+        // ============================================
+        async function chargerParticipants() {
+
+            // Remet le compteur en mode chargement
+            document.getElementById('compteur').textContent = '⏳ Chargement...';
+            document.getElementById('tableau-participants').innerHTML =
+                '<tr><td colspan="5" style="text-align:center; padding:20px; color:#8B6914;">⏳ Chargement des participants...</td></tr>';
+
+            try {
+                // On "appelle" le flux Power Automate de lecture
+                const reponse = await fetch(URL_LECTURE, {
+                    method: 'GET'
+                });
+
+                if (!reponse.ok) throw new Error('Erreur ' + reponse.status);
+
+                // On récupère les données en format JSON
+                const donnees = await reponse.json();
+
+                // On stocke les participants
+                participants = donnees;
+
+                // On affiche tout
+                afficherParticipants(participants);
+
+            } catch (erreur) {
+                console.error('Erreur chargement :', erreur);
+                document.getElementById('compteur').textContent = '❌ Erreur de chargement';
+                document.getElementById('tableau-participants').innerHTML =
+                    '<tr><td colspan="5" style="text-align:center; color:#CC0000; padding:20px;">❌ Impossible de charger les participants.<br>Vérifie ta connexion et le flux Power Automate.</td></tr>';
+            }
+        }
+
+        // ============================================
+        // AFFICHER LES PARTICIPANTS DANS LE TABLEAU
+        // ============================================
+        function afficherParticipants(liste) {
+
+            // Met à jour le compteur
+            document.getElementById('compteur').textContent =
+                '👥 ' + liste.length + ' participant' + (liste.length > 1 ? 's' : '') + ' au total';
+
+            // Si pas de participants
+            if (liste.length === 0) {
+                document.getElementById('tableau-participants').innerHTML =
+                    '<tr><td colspan="5" style="text-align:center; padding:20px; color:#8B6914;">Aucun participant pour le moment.</td></tr>';
+                return;
+            }
+
+            // Construit le tableau HTML
+            let html = '';
+            liste.forEach(function(p, index) {
+
+                // Formate la date (SharePoint renvoie une date au format ISO)
+                const date = new Date(p.Created);
+                const dateFormatee = date.toLocaleDateString('fr-FR') + ' ' +
+                                     date.toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
+
+                html += '<tr>';
+                html += '<td>' + (index + 1) + '</td>';
+                html += '<td>' + (p.Nom    || '-') + '</td>';
+                html += '<td>' + (p.Prenom || '-') + '</td>';
+                html += '<td>' + (p.Email  || '-') + '</td>';
+                html += '<td>' + dateFormatee + '</td>';
+                html += '</tr>';
+            });
+
+            document.getElementById('tableau-participants').innerHTML = html;
+        }
+
+        // ============================================
+        // LANCER LE TIRAGE AU SORT
+        // ============================================
+        function lancerTirage() {
+
+            // Vérifie qu'il y a des participants
+            if (participants.length === 0) {
+                alert('❌ Aucun participant à tirer au sort !');
+                return;
+            }
+
+            // Cache le résultat précédent et le bouton relancer
+            document.getElementById('resultat-tirage').style.display = 'none';
+            document.getElementById('btn-relancer').style.display    = 'none';
+
+            // Affiche l'animation
+            document.getElementById('animation-tirage').style.display = 'block';
+
+            // Simulation d'un tirage animé (2 secondes de suspense !)
+            let compteur = 0;
+            const animation = setInterval(function() {
+
+                // Affiche un nom aléatoire pendant l'animation
+                const indexAleatoire = Math.floor(Math.random() * participants.length);
+                const pTemp = participants[indexAleatoire];
+                document.getElementById('animation-tirage').textContent =
+                    '🎲 ' + (pTemp.Prenom || '') + ' ' + (pTemp.Nom || '') + ' 🎲';
+
+                compteur++;
+
+                // Après 2 secondes (20 x 100ms), on arrête et révèle le vrai gagnant
+                if (compteur >= 20) {
+                    clearInterval(animation);
+                    revelerGagnant();
+                }
+
+            }, 100); // Change toutes les 100ms
+        }
+
+        // ============================================
+        // RÉVÉLER LE GAGNANT FINAL
+        // ============================================
+        function revelerGagnant() {
+
+            // Tire un vrai numéro aléatoire
+            const indexGagnant = Math.floor(Math.random() * participants.length);
+            const gagnant      = participants[indexGagnant];
+
+            // Cache l'animation
+            document.getElementById('animation-tirage').style.display = 'none';
+
+            // Affiche le gagnant
+            document.getElementById('nom-gagnant').textContent   =
+                '🤠 ' + (gagnant.Prenom || '') + ' ' + (gagnant.Nom || '');
+            document.getElementById('email-gagnant').textContent =
+                '📧 ' + (gagnant.Email || '');
+
+            document.getElementById('resultat-tirage').style.display = 'block';
+
+            // Affiche le bouton pour relancer
+            document.getElementById('btn-relancer').style.display = 'block';
+        }
+
+    </script>
+
+</body>
+</html>
