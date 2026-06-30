@@ -326,7 +326,7 @@
         // ============================================
 
         // 🔐 Mot de passe admin — change-le ici !
-        const MOT_DE_PASSE = "keyence2025";
+        const MOT_DE_PASSE = "auid2024";
 
         // 🔗 URL du flux Power Automate de LECTURE
         const URL_LECTURE = "https://defaultcb5ba35d205641eb8d89b0ad0e93d1.31.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/21a63cbdf97c4be28f41fee41050e793/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=H1qwWIutr9Ynva69IS4cWJpUxWsR7B4Y27HRNxtIFuY";
@@ -369,7 +369,9 @@
             try {
                 // On "appelle" le flux Power Automate de lecture
                 const reponse = await fetch(URL_LECTURE, {
-                    method: 'GET'
+                    method: 'POST'
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({})
                 });
 
                 if (!reponse.ok) throw new Error('Erreur ' + reponse.status);
